@@ -12,20 +12,11 @@ import cucumber.runtime.junit.Assertions;
 import cucumber.runtime.junit.FeatureRunner;
 import cucumber.runtime.junit.JUnitReporter;
 import cucumber.runtime.model.CucumberFeature;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.internal.runners.model.ReflectiveCallable;
-import org.junit.internal.runners.statements.Fail;
-import org.junit.internal.runners.statements.RunAfters;
-import org.junit.internal.runners.statements.RunBefores;
-import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.ParentRunner;
-import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.MultipleFailureException;
-import org.junit.runners.model.Statement;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +35,7 @@ import java.util.List;
  *
  * @see CucumberOptions
  */
-public class Cucumber extends ParentRunner<FeatureRunner> {
+public class CucumberBlock extends BlockJUnit4ClassRunner {
     private final JUnitReporter jUnitReporter;
     private final List<FeatureRunner> children = new ArrayList<FeatureRunner>();
     private final Runtime runtime;
@@ -53,10 +44,10 @@ public class Cucumber extends ParentRunner<FeatureRunner> {
      * Constructor called by JUnit.
      *
      * @param clazz the class with the @RunWith annotation.
-     * @throws java.io.IOException                         if there is a problem
-     * @throws org.junit.runners.model.InitializationError if there is another problem
+     * @throws IOException                         if there is a problem
+     * @throws InitializationError if there is another problem
      */
-    public Cucumber(Class clazz) throws InitializationError, IOException {
+    public CucumberBlock(Class clazz) throws InitializationError, IOException {
         super(clazz);
         ClassLoader classLoader = clazz.getClassLoader();
         Assertions.assertNoCucumberAnnotatedMethods(clazz);
@@ -80,7 +71,7 @@ public class Cucumber extends ParentRunner<FeatureRunner> {
      * @param runtimeOptions configuration
      * @return a new runtime
      * @throws InitializationError if a JUnit error occurred
-     * @throws IOException         if a class or resource could not be loaded
+     * @throws IOException if a class or resource could not be loaded
      */
     protected Runtime createRuntime(ResourceLoader resourceLoader, ClassLoader classLoader,
                                     RuntimeOptions runtimeOptions) throws InitializationError, IOException {
@@ -100,72 +91,7 @@ public class Cucumber extends ParentRunner<FeatureRunner> {
 
     @Override
     protected void runChild(FeatureRunner child, RunNotifier notifier) {
-        Description description = describeChild(child);
-        Statement statement;
-        try {
-            statement = methodBlock(child);
-        } catch (Throwable ex) {
-            statement = new Fail(ex);
-        }
-        runLeaf(statement, description, notifier);
-    }
-
-    private Statement methodBlock(FeatureRunner child) {
-        Object test;
-        try {
-            test = new ReflectiveCallable() {
-                @Override
-                protected Object runReflectiveCall() throws Throwable {
-                    return createTest(method);
-                }
-            }.run();
-        } catch (Throwable e) {
-            return new Fail(e);
-        }
-
-        Statement statement = methodInvoker(method, test);
-        statement = withBefores(method, test, statement);
-        statement = withAfters(method, test, statement);
-        statement = withRules(method, test, statement);
-        return statement;
-    }
-
-    /**
-     * Returns a {@link Statement}: run all non-overridden {@code @Before}
-     * methods on this class and superclasses before running {@code next}; if
-     * any throws an Exception, stop execution and pass the exception on.
-     */
-    protected Statement withBefores(FrameworkMethod method, Object target,
-                                    Statement statement) {
-        List<FrameworkMethod> befores = getTestClass().getAnnotatedMethods(
-                Before.class);
-        return befores.isEmpty() ? statement : new RunBefores(statement,
-                befores, target);
-    }
-
-    /**
-     * Returns a {@link Statement}: run all non-overridden {@code @After}
-     * methods on this class and superclasses before running {@code next}; all
-     * After methods are always executed: exceptions thrown by previous steps
-     * are combined, if necessary, with exceptions from After methods into a
-     * {@link MultipleFailureException}.
-     */
-    protected Statement withAfters(FrameworkMethod method, Object target,
-                                   Statement statement) {
-        List<FrameworkMethod> afters = getTestClass().getAnnotatedMethods(
-                After.class);
-        return afters.isEmpty() ? statement : new RunAfters(statement, afters,
-                target);
-    }
-
-    private Statement withRules(FrameworkMethod method, Object target,
-                                Statement statement) {
-        List<TestRule> testRules = getTestRules(target);
-        Statement result = statement;
-        result = withMethodRules(method, testRules, target, result);
-        result = withTestRules(method, testRules, result);
-
-        return result;
+        child.run(notifier);
     }
 
     @Override
