@@ -111,7 +111,7 @@ public class Java8StepDefinition implements StepDefinition {
 
     @Override
     public void execute(final String language, final Object[] args) throws Throwable {
-        Utils.invoke(body, method, timeoutMillis, args);
+        Utils.invokeGlueCode(body, method, timeoutMillis, args);
     }
 
     @Override

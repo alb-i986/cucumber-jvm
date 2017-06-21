@@ -34,7 +34,7 @@ class JavaStepDefinition implements StepDefinition {
     }
 
     public void execute(String language, Object[] args) throws Throwable {
-        Utils.invoke(objectFactory.getInstance(method.getDeclaringClass()), method, timeoutMillis, args);
+        Utils.invokeGlueCode(objectFactory.getInstance(method.getDeclaringClass()), method, timeoutMillis, args);
     }
 
     public List<Argument> matchedArguments(PickleStep step) {

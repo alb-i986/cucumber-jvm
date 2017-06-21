@@ -57,7 +57,7 @@ class JavaHookDefinition implements HookDefinition {
                 throw new CucumberException("Hooks must declare 0 or 1 arguments. " + method.toString());
         }
 
-        Utils.invoke(objectFactory.getInstance(method.getDeclaringClass()), method, timeoutMillis, args);
+        Utils.invokeGlueCode(objectFactory.getInstance(method.getDeclaringClass()), method, timeoutMillis, args);
     }
 
     @Override

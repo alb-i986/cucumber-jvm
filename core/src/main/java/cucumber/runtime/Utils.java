@@ -29,6 +29,23 @@ public class Utils {
         return Modifier.isPublic(clazz.getModifiers()) && !Modifier.isAbstract(clazz.getModifiers()) && !isNonStaticInnerClass;
     }
 
+    /**
+     * Just an alias of {@link #invoke(Object, Method, long, Object...)} to be called by
+     * {@link StepDefinition} classes.
+     * <p>
+     * This helps end users <b>debugging scenarios</b>.
+     * By setting one breakpoint here, and one at the line {@code return targetMethod.invoke(target, args)}
+     * in {@link #invoke(Object, Method, long, Object...)} below,
+     * users are able to easily step through all the glue code, steps and hooks.
+     *
+     * @see #invoke(Object, Method, long, Object...)
+     *
+     * @since 2.0.0
+     */
+    public static Object invokeGlueCode(final Object target, final Method method, long timeoutMillis, final Object... args) throws Throwable {
+        return invoke(target, method, timeoutMillis, args);
+    }
+
     public static Object invoke(final Object target, final Method method, long timeoutMillis, final Object... args) throws Throwable {
         final Method targetMethod = targetMethod(target, method);
         return Timeout.timeout(new Timeout.Callback<Object>() {
